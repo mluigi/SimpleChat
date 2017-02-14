@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 class ClientMain {
@@ -22,11 +23,7 @@ class ClientMain {
 
         try {
             String address = JOptionPane.showInputDialog("Insert server address");
-            byte[] byteaddress = new byte[4];
-            for (int i = 0; i < address.split(".").length; i++) {
-                byteaddress[i] = Byte.valueOf(address.split(".")[i]);
-            }
-            Socket socket = new Socket(InetAddress.getByAddress(byteaddress), 8189);
+            Socket socket = new Socket(InetAddress.getByName(address), 8189);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             clientData = new ClientData(JOptionPane.showInputDialog("Insert name."),
