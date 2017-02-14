@@ -1,5 +1,5 @@
 # SimpleChat
-Simple chat made in java
+Simple chat made in java. (Needs Java 1.8)
 
 To run the server, execute from console:
 `gradlew Server:run`
