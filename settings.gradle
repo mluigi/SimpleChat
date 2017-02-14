@@ -1,0 +1,2 @@
+include ":Client", ":Server", ":common"
+rootProject.name = 'simplechat'

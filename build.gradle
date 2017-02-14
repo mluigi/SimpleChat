@@ -1,0 +1,116 @@
+group 'pr0.ves'
+version '1.0-SNAPSHOT'
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'java'
+    buildDir = "/build/"
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        flatDir dirs: "${rootDir}/libs"
+        mavenCentral()
+        maven {
+            url 'https://repo.spring.io/libs-snapshot'
+        }
+    }
+
+    configurations {
+        antTask
+    }
+
+    dependencies {
+        compile name: 'forms_rt', version: '13.1.1'
+        antTask name: 'javac2', version: '13.1.1'
+        antTask name: 'asm-all', version: '13.1.1'
+        antTask group: 'org.jdom', name: 'jdom', version: '1.1'
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/main/java'
+            }
+        }
+    }
+
+    jar {
+        manifest {
+            attributes("Implementation-Title": "Gradle",
+                    "Implementation-Version": ";)")
+        }
+    }
+}
+
+project(':common') {
+
+}
+
+project(':Client') {
+    apply plugin: 'application'
+    mainClassName = 'pr0.ves.simplechat.Client.ClientMain'
+    applicationName = 'SimpleChatClient'
+    dependencies {
+        compile project(':common')
+    }
+    jar {
+        manifest {
+            attributes(
+                    'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                    'Main-Class': 'pr0.ves.simplechat.Client.ClientMain'
+            )
+        }
+        from {
+            configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        }
+    }
+
+    task compileJava(overwrite: true, dependsOn: configurations.compile.getTaskDependencyFromProjectDependency(true, 'jar')) {
+        doLast {
+            project.sourceSets.main.output.classesDir.mkdirs()
+            ant.taskdef name: 'javac2', classname: 'com.intellij.ant.Javac2', classpath: configurations.antTask.asPath
+            ant.javac2 srcdir: project.sourceSets.main.java.srcDirs.join(':'),
+                    classpath: project.sourceSets.main.compileClasspath.asPath,
+                    destdir: project.sourceSets.main.output.classesDir,
+                    source: sourceCompatibility,
+                    target: targetCompatibility,
+                    includeAntRuntime: false
+        }
+    }
+}
+
+project(':Server') {
+    apply plugin: 'application'
+    mainClassName = 'pr0.ves.simplechat.Server.ServerMain'
+    applicationName = 'SimpleChatServer'
+    dependencies {
+        compile project(':common')
+    }
+
+    jar {
+        manifest {
+            attributes(
+                    'Class-Path': configurations.runtime.files.collect { "lib/$it.name" }.join(' '),
+                    'Main-Class': mainClassName
+            )
+        }
+        from {
+            configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        }
+    }
+
+    task compileJava(overwrite: true, dependsOn: configurations.compile.getTaskDependencyFromProjectDependency(true, 'jar')) {
+        doLast {
+            project.sourceSets.main.output.classesDir.mkdirs()
+            ant.taskdef name: 'javac2', classname: 'com.intellij.ant.Javac2', classpath: configurations.antTask.asPath
+            ant.javac2 srcdir: project.sourceSets.main.java.srcDirs.join(':'),
+                    classpath: project.sourceSets.main.compileClasspath.asPath,
+                    destdir: project.sourceSets.main.output.classesDir,
+                    source: sourceCompatibility,
+                    target: targetCompatibility,
+                    includeAntRuntime: false
+        }
+    }
+}
