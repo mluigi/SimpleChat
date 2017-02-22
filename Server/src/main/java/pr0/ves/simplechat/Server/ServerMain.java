@@ -33,7 +33,7 @@ public class ServerMain implements MessageListener {
                         refreshClientPanel();
                         frame.pack();
                     }
-                    new Thread(() -> runWhileUp(this::checkClientList, 5)).start();
+                    new Thread(() -> runWhileUp(this::checkClientList, 1)).start();
                     new Thread(() -> runWhileUp(this::listenToClients)).start();
                 } catch (IOException e) {
                     e.printStackTrace();
