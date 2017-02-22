@@ -37,7 +37,7 @@ class ServerWeb implements MessageListener {
         if (message.startsWith("MESSAGE")) {
             this.message.append("<p>").append(serverThread.getClientData().getName()).append(": ").append(message.split("=", 2)[1]).append("</p>\n");
         } else if (message.startsWith("CHECKNAME") || message.startsWith("NAMEANDADDRESS")) {
-            if (serverThread.isChecked()) {
+            if (serverThread.isInitialized()) {
                 this.message.append("<p>").append(serverThread.getClientData().getName()).append(" is connecting.").append("</p>\n");
             }
         } else if (message.startsWith("EXIT")) {

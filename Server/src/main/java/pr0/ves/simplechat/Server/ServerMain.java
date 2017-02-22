@@ -6,6 +6,7 @@ import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 public class ServerMain implements MessageListener {
@@ -32,7 +33,7 @@ public class ServerMain implements MessageListener {
                         refreshClientPanel();
                         frame.pack();
                     }
-                    new Thread(() -> runWhileUp(this::checkClientList, 1)).start();
+                    new Thread(() -> runWhileUp(this::checkClientList, 5)).start();
                     new Thread(() -> runWhileUp(this::listenToClients)).start();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -116,7 +117,14 @@ public class ServerMain implements MessageListener {
     }
 
     private void checkClientList() {
-        clientsThreads.stream().filter(s -> (s.isInterrupted() || s.getSocket().isClosed() || !s.getSocket().isConnected())).forEach(clientsThreads::remove);
+        clientsThreads.removeIf(s -> !s.isConnectionCheck());
+        clientsThreads.forEach(s -> {
+            if (s.isInitialized()) {
+                s.getClientData().out.println("KEEPALIVE");
+                System.out.println("sent keepalive to " + s.getClientData().getName());
+                s.setConnectionCheck(false);
+            }
+        });
         refreshClientPanel();
     }
 
@@ -175,12 +183,12 @@ public class ServerMain implements MessageListener {
     @Override
     synchronized public void processMessage(ServerThread serverThread, String message) {
         if (message.startsWith("CHECKNAME")) {
-            serverThread.setName(message.split("=", 2)[1]);
+            serverThread.setName(message.split("=", 2)[1].trim());
             boolean alreadyUsed = checkClientName(serverThread);
             if (alreadyUsed) {
                 serverThread.getClientData().out.println("CHECKNAME=ERROR");
             } else {
-                serverThread.setChecked(true);
+                serverThread.setInitialized(true);
                 serverThread.getClientData().out.println("CHECKNAME=OK");
                 clientsThreads.forEach(
                         s -> s.getClientData().out.println("MESSAGE=" + serverThread.getClientData().getName() + " is connecting."));
@@ -194,7 +202,11 @@ public class ServerMain implements MessageListener {
             clientsThreads.remove(serverThread);
             serverThread.getClientData().out.println("EXIT=SUCCESS");
             serverThread.interrupt();
+        } else if (message.startsWith("KEEPALIVE")) {
+            serverThread.setConnectionCheck(true);
         }
     }
+
+
 }
 

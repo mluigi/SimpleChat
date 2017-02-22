@@ -48,7 +48,6 @@ class ClientMain {
                 new Thread(() -> {
                     try {
                         TimeUnit.SECONDS.sleep(4);
-                        JOptionPane.showMessageDialog(frame, "Couldn't confirm exit with server.\nForcing exit.");
                         System.exit(1);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -146,6 +145,8 @@ class ClientMain {
                 String inputLine = this.clientData.in.readLine();
                 if (inputLine.startsWith("MESSAGE=")) {
                     panel.getTextArea1().append(inputLine.split("=", 2)[1] + "\n");
+                }else if (inputLine.equals("KEEPALIVE")){
+                    clientData.out.println("KEEPALIVE");
                 }
             }
         } catch (IOException e) {

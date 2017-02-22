@@ -15,7 +15,8 @@ class ServerThread extends Thread {
     private Socket socket = null;
     private ClientData clientData;
     private final List<MessageListener> listeners = new ArrayList<>();
-    private boolean check = false;
+    private boolean initialized = false;
+    private boolean connectionCheck = true;
 
     ServerThread(Socket socket) {
         super("ServerThread");
@@ -26,12 +27,11 @@ class ServerThread extends Thread {
         try {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.println("connected");
             String inputLine;
-            while (!check) {
+            while (!initialized) {
                 inputLine = in.readLine();
                 if (inputLine.startsWith("CHECKNAME=")) {
-                    this.clientData = new ClientData(inputLine.split("=",2)[1], socket.getInetAddress().getHostAddress(), in, out);
+                    this.clientData = new ClientData(inputLine.split("=",2)[1].trim(), socket.getInetAddress().getHostAddress(), in, out);
                 }
                 readMessage(inputLine);
             }
@@ -49,16 +49,16 @@ class ServerThread extends Thread {
         listeners.add(toAdd);
     }
 
-    void setChecked(boolean check) {
-        this.check = check;
+    void setInitialized(boolean check) {
+        this.initialized = check;
     }
 
     ClientData getClientData() {
         return clientData;
     }
 
-    boolean isChecked() {
-        return check;
+    boolean isInitialized() {
+        return initialized;
     }
 
     Socket getSocket() {
@@ -67,5 +67,13 @@ class ServerThread extends Thread {
 
     private void readMessage(String message) {
         listeners.forEach(listener -> listener.processMessage(this,message));
+    }
+
+    public boolean isConnectionCheck() {
+        return connectionCheck;
+    }
+
+    public void setConnectionCheck(boolean connectionCheck) {
+        this.connectionCheck = connectionCheck;
     }
 }
